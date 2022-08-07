@@ -1,0 +1,2 @@
+# projectstreamwebclient
+A JavaScript project

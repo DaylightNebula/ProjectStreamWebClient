@@ -1,0 +1,1 @@
+"C:\Users\DaylightNebula\.jdks\openjdk-18.0.1.1\bin\java.exe" -jar WebServer.jar
