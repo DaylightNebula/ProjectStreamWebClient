@@ -1,10 +1,21 @@
 class Texture {
     constructor(gl, url) {
-        this.texture = loadTexture(gl, url);
+        this.id = null;
+        loadTexture(gl, this, url);
     }
 }
+class Material {
+  constructor(gl, albedoPath) {
+    this.gl = gl;
+    this.albedo = new Texture(gl, albedoPath);
+  }
 
-function loadTexture(gl, url) {
+  setAO(path) { this.ao = new Texture(this.gl, path); }
+  setNormal(path) { this.normal = new Texture(this.gl, path); }
+  setRoughness(path) { this.roughness = new Texture(this.gl, path); }
+}
+
+function loadTexture(gl, outTexture, url) {
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
   
@@ -32,17 +43,34 @@ function loadTexture(gl, url) {
       srcType,
       pixel
     );
+
+    var blobURL = URL.createObjectURL( new Blob(
+      [
+        '(',
+        self.onmessage = (e) => {
+          console.log("Message received" + e);
+        },
+        ')()'
+      ], { type: 'application/javascript' }
+    ) );
   
-    const image = new Image();
+    const textureWorker = new Worker(blobURL);
+    URL.revokeObjectURL(blobURL);
+    //textureWorker.postMessage("Hi");
+
+    var image = new Image();
     image.onload = function () {
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(
         gl.TEXTURE_2D,
         level,
         internalFormat,
+        //image.width,
+        //image.height,
+        //0,
         srcFormat,
         srcType,
-        image
+        image//.decode()
       );
   
       // WebGL1 has different requirements for power of 2 images
@@ -61,7 +89,8 @@ function loadTexture(gl, url) {
     };
     image.src = url;
   
-    return texture;
+    //return texture;
+    outTexture.id = texture;
   }
   
   function isPowerOf2(value) {

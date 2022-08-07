@@ -36,10 +36,13 @@ function main() {
   shader = new ShaderProgram(gl, "BasicShader", vertexShaderSource, fragmentShaderSource);
 
   // load texture
-  texture = new Texture(gl, "./assets/Albedo.png");
+  material = new Material(gl, "./assets/horns/Albedo.png");
+  material.setAO("./assets/horns/AO.png");
+  material.setRoughness("./assets/horns/Roughness.png");
+  material.setNormal("./assets/horns/Normal.png");
 
   // load positions and colors into a mesh
-  mesh = new Mesh(gl, texture, cubeVertices, cubeTextCoords, /*cubeIndices,*/ cubeNormals);
+  mesh = new Mesh(gl, material, cubeVertices, cubeTextCoords, /*cubeIndices,*/ cubeNormals);
 
   // create camera
   camera = new Camera([0, 0, 0], [0, 0, 0, 1], 45, 0.1, 10000.0);
@@ -54,7 +57,7 @@ function main() {
   entities.push(a);
   //entities.push(b);
 
-  loadMeshFromAssets(gl, texture, a, "./assets/horns.obj");
+  loadMeshFromAssets(gl, material, a, "./assets/horns/model.obj");
   //loadMeshFromAssets(gl, texture, b, "./assets/knife.obj");
 
   console.log("Finished startup!");

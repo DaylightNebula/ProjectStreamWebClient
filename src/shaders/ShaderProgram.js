@@ -14,13 +14,31 @@ class ShaderProgram {
               textureCoord: gl.getAttribLocation(this.program, "aTextureCoord"),
             },
             uniformLocations: {
+              // textures
+              albedo: gl.getUniformLocation(this.program, 'albedo'),
+              normal: gl.getUniformLocation(this.program, 'normal'),
+              roughness: gl.getUniformLocation(this.program, 'roughness'),
+              ao: gl.getUniformLocation(this.program, 'ao'),
+
+              // texture actives
+              useAlbedo: gl.getUniformLocation(this.program, 'useAlbedo'),
+              useNormal: gl.getUniformLocation(this.program, 'useNormal'),
+              useRoughness: gl.getUniformLocation(this.program, 'useRoughness'),
+              useAO: gl.getUniformLocation(this.program, 'useAO'),
+
+              // matrices
               projectionMatrix: gl.getUniformLocation(this.program, 'uProjectionMatrix'),
               modelViewMatrix: gl.getUniformLocation(this.program, 'uModelViewMatrix'),
               normalMatrix: gl.getUniformLocation(this.program, 'uNormalMatrix'),
+
+              // material strengths
               specularStrength: gl.getUniformLocation(this.program, 'specularStrength'),
               ambientStrength: gl.getUniformLocation(this.program, 'ambientStrength'),
-              uSampler: gl.getUniformLocation(this.program, 'uSampler'),
+
+              // camera information
               viewPos: gl.getUniformLocation(this.program, 'viewPos'),
+
+              // light information
               lightCount: gl.getUniformLocation(this.program, "lightCount"),
               lightColor: gl.getUniformLocation(this.program, 'lightColor'),
               lightPos: gl.getUniformLocation(this.program, 'lightPos'),
@@ -130,12 +148,9 @@ class ShaderProgram {
       gl.uniformMatrix4fv(this.programInfo.uniformLocations.normalMatrix, false, normalMatrix);
 
       // load textures
-      mesh.loadTexture(gl, this);
+      mesh.loadMaterial(gl, this);
 
       // draw
-      console.log("VERTEX COUNT " + mesh.vertexCount);
-      const type = gl.UNSIGNED_INT;
-      const offset = 0;
       gl.drawArrays(gl.TRIANGLES, 0, mesh.vertexCount);
     }
 }

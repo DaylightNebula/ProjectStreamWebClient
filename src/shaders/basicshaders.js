@@ -23,7 +23,18 @@ const fragmentShaderSource = `
 varying highp vec3 vFragPos;
 varying highp vec2 vTextureCoord;
 varying highp vec3 vNormal;
-uniform sampler2D uSampler;
+
+// textures
+uniform sampler2D albedo;
+uniform sampler2D normal;
+uniform sampler2D roughness;
+uniform sampler2D ao;
+
+// texture actives
+uniform bool useAlbedo;
+uniform bool useNormal;
+uniform bool useRoughness;
+uniform bool useAO;
 
 uniform highp vec3 viewPos;
 
@@ -44,10 +55,18 @@ uniform highp float specularStrength;
 uniform highp float ambientStrength;
 
 void main(void) {
-    // object color
-    highp vec4 objectcolor = texture2D(uSampler, vTextureCoord);
+    // breakup textures
+    highp vec4 objectcolor = vec4(0.0, 0.0, 1.0, 1.0);
+	if (useAlbedo) objectcolor = texture2D(albedo, vTextureCoord);
+	if (useAO) objectcolor *= texture2D(ao, vTextureCoord);
+
+	// setup basic information
     highp vec3 color = vec3(0.0, 0.0, 0.0);
     highp vec3 norm = normalize(vNormal);
+	if (useNormal) {
+		highp vec3 texNormal = normalize(texture2D(normal, vTextureCoord).rgb * 2.0 - 1.0);
+		norm = normalize(norm + texNormal);
+	}
 
     // loop through all lights
     for (int lightIndex = 0; lightIndex < 16; lightIndex++) {
@@ -68,6 +87,7 @@ void main(void) {
 	    highp vec3 reflectDir = reflect(-lightDir, norm);  
 	    highp float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
 	    highp vec3 specular = specularStrength * spec * lightColor[lightIndex];  
+	    if (useRoughness) specular *= texture2D(roughness, vTextureCoord).rgb;
 		
 	    // attenuation
 	    highp float attenuation = 1.0;

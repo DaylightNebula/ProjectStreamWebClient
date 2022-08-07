@@ -1,11 +1,11 @@
 class Mesh {
-    constructor(gl, texture, vertices, uvs, /*indices,*/ normals) {
+    constructor(gl, material, vertices, uvs, /*indices,*/ normals) {
         // vertices
         this.vertexCount = vertices.length / 3;
         this.vertices = createVAO(gl, vertices);
 
         // texture uvs
-        this.texture = texture;
+        this.material = material;
         this.textureUVs = createVAO(gl, uvs);
 
         // indices
@@ -55,10 +55,42 @@ class Mesh {
         gl.enableVertexAttribArray(shader.programInfo.attribLocations.vertexNormal);
     }
 
-    loadTexture(gl, shader) {
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, this.texture.texture);
-        gl.uniform1i(shader.programInfo.uniformLocations.uSampler, 0);
+    loadMaterial(gl, shader) {
+        // albedo
+        var useAlbedo = this.material.albedo.id instanceof WebGLTexture;
+        gl.uniform1i(shader.programInfo.uniformLocations.useAlbedo, useAlbedo);
+        if (useAlbedo) {
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.material.albedo.id);
+            gl.uniform1i(shader.programInfo.uniformLocations.albedo, 0);
+        }
+
+        // normal
+        var useNormal = this.material.normal.id instanceof WebGLTexture;
+        gl.uniform1i(shader.programInfo.uniformLocations.useNormal, useNormal);
+        if (useNormal) {
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, this.material.normal.id);
+            gl.uniform1i(shader.programInfo.uniformLocations.normal, 1);
+        }
+
+        // roughness
+        var useRoughness = this.material.roughness.id instanceof WebGLTexture;
+        gl.uniform1i(shader.programInfo.uniformLocations.useRoughness, useRoughness);
+        if (useRoughness) {
+            gl.activeTexture(gl.TEXTURE2);
+            gl.bindTexture(gl.TEXTURE_2D, this.material.roughness.id);
+            gl.uniform1i(shader.programInfo.uniformLocations.roughness, 2);
+        }
+
+        // ao
+        var useAO = this.material.ao.id instanceof WebGLTexture;
+        gl.uniform1i(shader.programInfo.uniformLocations.useAO, useAO);
+        if (useAO) {
+            gl.activeTexture(gl.TEXTURE3);
+            gl.bindTexture(gl.TEXTURE_2D, this.material.ao.id);
+            gl.uniform1i(shader.programInfo.uniformLocations.ao, 3);
+        }
     }
 }
 
@@ -78,13 +110,18 @@ function createElementArray(gl, array) {
     return buffer;
 }
 
-async function loadMeshFromAssets(gl, texture, entity, path) {
+function loadMeshFromAssets(gl, material, entity, path) {
     // get array buffer
-    var arrayBuffer = await fetch(path).then(response => response.arrayBuffer());
+    fetch(path)
+    .then(response => response.arrayBuffer())
+    .then(arrayBuffer => loadMeshFromArrayBuffer(gl, arrayBuffer, material, entity));
+}
+function loadMeshFromArrayBuffer(gl, arrayBuffer, material, entity) {
     var dataView = new DataView(arrayBuffer, 0);
 
     // get vertices
     var vertexCount = dataView.getInt32(0, true) - Number.MIN_VALUE;
+    console.log("Vertex count " + vertexCount);
     var counter = 4;
     var tmpVertices = [];
     for (let i = 0; i < vertexCount; i++) {
@@ -141,8 +178,6 @@ async function loadMeshFromAssets(gl, texture, entity, path) {
     //console.log("UVs count " + (texCoords.length / 2));
 
     // return new mesh
-    entity.mesh = new Mesh(gl, texture, vertices, texCoords, normals);
+    entity.mesh = new Mesh(gl, material, vertices, texCoords, normals);
     mesh.vertexCount = vertices.length / 3;
-
-    console.log("Loaded mesh from " + path);
 }
