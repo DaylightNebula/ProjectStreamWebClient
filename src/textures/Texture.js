@@ -1,7 +1,6 @@
 class Texture {
     constructor(gl, url) {
-        this.id = null;
-        loadTexture(gl, this, url);
+        this.id = loadTexture(gl, this, url);
     }
 }
 class Material {
@@ -44,54 +43,60 @@ function loadTexture(gl, outTexture, url) {
       pixel
     );
 
-    var blobURL = URL.createObjectURL( new Blob(
-      [
-        '(',
-        self.onmessage = (e) => {
-          console.log("Message received" + e);
-        },
-        ')()'
-      ], { type: 'application/javascript' }
-    ) );
+    applyTexture(gl, url, texture);
   
-    const textureWorker = new Worker(blobURL);
-    URL.revokeObjectURL(blobURL);
-    //textureWorker.postMessage("Hi");
-
-    var image = new Image();
-    image.onload = function () {
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(
-        gl.TEXTURE_2D,
-        level,
-        internalFormat,
-        //image.width,
-        //image.height,
-        //0,
-        srcFormat,
-        srcType,
-        image//.decode()
-      );
-  
-      // WebGL1 has different requirements for power of 2 images
-      // vs non power of 2 images so check if the image is a
-      // power of 2 in both dimensions.
-      if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
-        // Yes, it's a power of 2. Generate mips.
-        gl.generateMipmap(gl.TEXTURE_2D);
-      } else {
-        // No, it's not a power of 2. Turn off mips and set
-        // wrapping to clamp to edge
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      }
-    };
-    image.src = url;
-  
-    //return texture;
-    outTexture.id = texture;
+    return texture;
   }
+
+  async function applyTexture(gl, url, texture) {
+    const res = await fetch(url, {mode: 'cors'});
+    const blob = await res.blob();
+    const bitmap = await createImageBitmap(blob, {
+      premultiplyAlpha: 'none',
+      colorSpaceConversion: 'none',
+    });
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, bitmap.width, bitmap.height, 0, gl.RGB, gl.UNSIGNED_BYTE, null);
+    //gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, bitmap);
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, bitmap.width, bitmap.height, gl.RGB, bitmap);
+    if (isPowerOf2(bitmap.width) && isPowerOf2(bitmap.height)) {
+      // Yes, it's a power of 2. Generate mips.
+      gl.generateMipmap(gl.TEXTURE_2D);
+    } else {
+      // No, it's not a power of 2. Turn off mips and set
+      // wrapping to clamp to edge
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+  }
+
+  // async function applyTexture(gl, url, texture) {
+  //   var image = new Image();
+  //   image.onload = function () {
+  //     gl.bindTexture(gl.TEXTURE_2D, texture);
+  //     gl.texImage2D(
+  //       gl.TEXTURE_2D,
+  //       0,
+  //       gl.RGBA,
+  //       gl.RGBA,
+  //       gl.UNSIGNED_BYTE,
+  //       image
+  //     );
+
+  //     if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+  //       // Yes, it's a power of 2. Generate mips.
+  //       gl.generateMipmap(gl.TEXTURE_2D);
+  //     } else {
+  //       // No, it's not a power of 2. Turn off mips and set
+  //       // wrapping to clamp to edge
+  //       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  //       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  //       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  //     }
+  //   };
+  //   image.src = url;
+  // }
   
   function isPowerOf2(value) {
     return (value & (value - 1)) == 0;

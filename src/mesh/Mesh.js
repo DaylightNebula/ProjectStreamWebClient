@@ -57,7 +57,7 @@ class Mesh {
 
     loadMaterial(gl, shader) {
         // albedo
-        var useAlbedo = this.material.albedo.id instanceof WebGLTexture;
+        var useAlbedo = this.material.albedo instanceof Texture && this.material.albedo.id instanceof WebGLTexture;
         gl.uniform1i(shader.programInfo.uniformLocations.useAlbedo, useAlbedo);
         if (useAlbedo) {
             gl.activeTexture(gl.TEXTURE0);
@@ -66,7 +66,7 @@ class Mesh {
         }
 
         // normal
-        var useNormal = this.material.normal.id instanceof WebGLTexture;
+        var useNormal = this.material.normal instanceof Texture && this.material.normal.id instanceof WebGLTexture;
         gl.uniform1i(shader.programInfo.uniformLocations.useNormal, useNormal);
         if (useNormal) {
             gl.activeTexture(gl.TEXTURE1);
@@ -75,7 +75,7 @@ class Mesh {
         }
 
         // roughness
-        var useRoughness = this.material.roughness.id instanceof WebGLTexture;
+        var useRoughness = this.material.roughness instanceof Texture && this.material.roughness.id instanceof WebGLTexture;
         gl.uniform1i(shader.programInfo.uniformLocations.useRoughness, useRoughness);
         if (useRoughness) {
             gl.activeTexture(gl.TEXTURE2);
@@ -84,7 +84,7 @@ class Mesh {
         }
 
         // ao
-        var useAO = this.material.ao.id instanceof WebGLTexture;
+        var useAO = this.material.ao instanceof Texture && this.material.ao.id instanceof WebGLTexture;
         gl.uniform1i(shader.programInfo.uniformLocations.useAO, useAO);
         if (useAO) {
             gl.activeTexture(gl.TEXTURE3);
